@@ -2,17 +2,16 @@
     --card-background: white;
     --body-background: #f0f2f5;
     --text-primary: #333;
-    --text-secondary: #555;
-    --border-color: #ddd;
+    --text-secondary: #6c757d; /* Un gris más suave */
+    --border-color: #dee2e6;
 }
 
-/* Soporte para Dark Mode que nos regala el navegador/Vercel */
 @media (prefers-color-scheme: dark) {
     :root {
         --card-background: #1c1c1e;
         --body-background: #000;
         --text-primary: #f2f2f7;
-        --text-secondary: #a3a3a8;
+        --text-secondary: #8e8e93;
         --border-color: #3a3a3c;
     }
 }
@@ -22,25 +21,24 @@ body {
     background-color: var(--body-background);
     color: var(--text-primary);
     margin: 0;
-    padding: 20px 10px; /* Añade padding para que no se pegue a los bordes */
+    padding: 20px 10px;
     box-sizing: border-box;
 }
 
-/* 1. ESTILOS PARA EL NUEVO CONTENEDOR PRINCIPAL */
 .main-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: calc(100vh - 40px);
+    /* 2. ELIMINAMOS min-height para evitar el "patinaje" en móvil */
 }
 
 .card {
     background-color: var(--card-background);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 420px;
     box-sizing: border-box;
@@ -49,120 +47,53 @@ body {
 h1 {
     text-align: center;
     font-size: 24px;
-    margin: 0 0 10px 0;
+    margin: 0 0 15px 0;
 }
 
 .uf-display {
     text-align: center;
-    color: var(--text-secondary);
-    margin: 0 0 25px 0;
-    font-size: 14px;
+    margin-bottom: 25px;
+    font-size: 15px; /* Tamaño del valor de la UF */
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
+/* 1. NUEVO ESTILO PARA LA FECHA EN CURSIVA */
+.uf-display .uf-date {
+    display: block; /* Para que ocupe su propia línea */
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+
+.input-container, .result-main, .secondary-result {
+    /* ... el resto de los estilos se mantienen igual ... */
+    transition: transform 0.2s ease;
+}
 .input-container {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
 }
-
-.input-group {
-    flex-grow: 1;
-}
-
-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-input, select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 16px;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-    background-color: var(--card-background);
-    color: var(--text-primary);
-}
-
-select {
-    cursor: pointer;
-}
-
-/* Resultado Principal */
-.result-main {
-    background-color: #e6f7ff;
-    border: 1px solid #91d5ff;
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-    margin-bottom: 15px;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-.result-main:hover {
-    transform: scale(1.02);
-}
+.input-group { flex-grow: 1; }
+label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; box-sizing: border-box; font-family: 'Inter', sans-serif; background-color: var(--card-background); color: var(--text-primary); }
+select { cursor: pointer; }
+.result-main { background-color: #e6f7ff; border: 1px solid #91d5ff; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; cursor: pointer; }
+.result-main:hover { transform: scale(1.02); }
 .result-main h2, .result-main p { color: #036497; }
 .result-main h2 { font-size: 16px; margin: 0; }
 .result-main p { font-size: 28px; font-weight: 700; margin: 5px 0 0 0; }
-
-
-/* 2. LA MAGIA DEL CSS GRID PARA LOS RESULTADOS SECUNDARIOS */
-.secondary-results {
-    display: grid;
-    /* Crea columnas automáticas que miden como mínimo 120px */
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-}
-
-.secondary-result {
-    background-color: #f7f7f7;
-    border: 1px solid #e8e8e8;
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-.secondary-result:hover {
-    transform: scale(1.03);
-}
-
-/* Dark mode para resultados secundarios */
+.secondary-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.secondary-result { background-color: #f7f7f7; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; }
+.secondary-result:hover { transform: scale(1.03); }
 @media (prefers-color-scheme: dark) {
-    .result-main {
-        background-color: #003a5c;
-        border-color: #005a8d;
-    }
+    .result-main { background-color: #003a5c; border-color: #005a8d; }
     .result-main h2, .result-main p { color: #e6f7ff; }
-    
-    .secondary-result {
-        background-color: #2c2c2e;
-        border-color: #3a3a3c;
-    }
+    .secondary-result { background-color: #2c2c2e; border-color: #3a3a3c; }
 }
-
-.secondary-result h2 {
-    font-size: 14px;
-    margin: 0 0 5px 0;
-    color: var(--text-secondary);
-}
-.secondary-result p {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0;
-    color: var(--text-primary);
-}
-
-
-/* 3. ESTILO FINAL PARA EL CRÉDITO */
-.credit {
-    text-align: center;
-    margin-top: 25px;
-    color: var(--text-secondary);
-    font-size: 12px;
-}
+.secondary-result h2 { font-size: 14px; margin: 0 0 5px 0; color: var(--text-secondary); }
+.secondary-result p { font-size: 18px; font-weight: 700; margin: 0; color: var(--text-primary); }
+.credit { text-align: center; margin-top: 25px; color: var(--text-secondary); font-size: 12px; }
