@@ -31,7 +31,9 @@ body {
     align-items: center;
     justify-content: center;
     width: 100%;
-    /* 2. ELIMINAMOS min-height para evitar el "patinaje" en móvil */
+    /* ESTA ES LA LÍNEA MÁGICA: */
+    /* Ocupa el 100% de la altura visible de forma dinámica y estable */
+    min-height: 100dvh; 
 }
 
 .card {
@@ -58,7 +60,6 @@ h1 {
     font-weight: 500;
 }
 
-/* 1. NUEVO ESTILO PARA LA FECHA EN CURSIVA */
 .uf-display .uf-date {
     display: block; /* Para que ocupe su propia línea */
     font-size: 12px;
@@ -69,7 +70,6 @@ h1 {
 
 
 .input-container, .result-main, .secondary-result {
-    /* ... el resto de los estilos se mantienen igual ... */
     transition: transform 0.2s ease;
 }
 .input-container {
