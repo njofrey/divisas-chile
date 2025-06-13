@@ -2,7 +2,7 @@
     --card-background: white;
     --body-background: #f0f2f5;
     --text-primary: #333;
-    --text-secondary: #6c757d; /* Un gris más suave */
+    --text-secondary: #6c757d;
     --border-color: #dee2e6;
 }
 
@@ -31,8 +31,6 @@ body {
     align-items: center;
     justify-content: center;
     width: 100%;
-    /* ESTA ES LA LÍNEA MÁGICA: */
-    /* Ocupa el 100% de la altura visible de forma dinámica y estable */
     min-height: 100dvh; 
 }
 
@@ -55,39 +53,31 @@ h1 {
 .uf-display {
     text-align: center;
     margin-bottom: 25px;
-    font-size: 15px; /* Tamaño del valor de la UF */
+    font-size: 15px;
     color: var(--text-primary);
     font-weight: 500;
 }
 
 .uf-display .uf-date {
-    display: block; /* Para que ocupe su propia línea */
+    display: block;
     font-size: 12px;
     font-style: italic;
     color: var(--text-secondary);
     margin-top: 4px;
 }
 
-
-.input-container, .result-main, .secondary-result {
-    transition: transform 0.2s ease;
-}
-.input-container {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-}
+.input-container { display: flex; gap: 15px; margin-bottom: 20px; }
 .input-group { flex-grow: 1; }
 label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
 input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; box-sizing: border-box; font-family: 'Inter', sans-serif; background-color: var(--card-background); color: var(--text-primary); }
 select { cursor: pointer; }
-.result-main { background-color: #e6f7ff; border: 1px solid #91d5ff; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; cursor: pointer; }
+.result-main { background-color: #e6f7ff; border: 1px solid #91d5ff; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; cursor: pointer; transition: transform 0.2s ease; }
 .result-main:hover { transform: scale(1.02); }
 .result-main h2, .result-main p { color: #036497; }
 .result-main h2 { font-size: 16px; margin: 0; }
 .result-main p { font-size: 28px; font-weight: 700; margin: 5px 0 0 0; }
 .secondary-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-.secondary-result { background-color: #f7f7f7; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; }
+.secondary-result { background-color: #f7f7f7; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: transform 0.2s ease; }
 .secondary-result:hover { transform: scale(1.03); }
 @media (prefers-color-scheme: dark) {
     .result-main { background-color: #003a5c; border-color: #005a8d; }
@@ -96,4 +86,22 @@ select { cursor: pointer; }
 }
 .secondary-result h2 { font-size: 14px; margin: 0 0 5px 0; color: var(--text-secondary); }
 .secondary-result p { font-size: 18px; font-weight: 700; margin: 0; color: var(--text-primary); }
-.credit { text-align: center; margin-top: 25px; color: var(--text-secondary); font-size: 12px; }
+
+/* Estilos para el nuevo pie de página */
+.footer {
+    text-align: center;
+    margin-top: 25px;
+    max-width: 420px;
+    width: 100%;
+}
+.credit {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin: 0;
+}
+.data-source {
+    color: var(--text-secondary);
+    font-size: 10px;
+    margin-top: 8px;
+    font-style: italic;
+}
