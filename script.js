@@ -19,24 +19,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('https://www.datos.gov.co/resource/mcec-87by.json')
             ]);
             
-            // CORRECCIÓN DEL ERROR: Usar [0] en vez de ['0']
             const ufData = await ufResponse.json();
             rates.uf = ufData.serie[0].valor;
             const dolarData = await dolarResponse.json();
             rates.usd = dolarData.serie[0].valor;
             const euroData = await euroResponse.json();
             rates.eur = euroData.serie[0].valor;
-            
             const arsData = await arsResponse.json();
             rates.ars = arsData.blue.value_sell;
             const copData = await copResponse.json();
             rates.cop = parseFloat(copData[0].valor);
 
+            // --- 1. CONSTRUIR EL NUEVO FORMATO DE FECHA/UF ---
             const today = new Date();
             const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
             const formattedDate = today.toLocaleDateString('es-CL', dateOptions);
             const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
-            ufRateDisplay.textContent = `UF hoy ${formattedDate}: ${formattedUfValue}`;
+
+            // Se crea el HTML con la nueva estructura
+            const ufDisplayHtml = `
+                <span>UF hoy = ${formattedUfValue}</span>
+                <div class="uf-date">${formattedDate}</div>
+            `;
+            ufRateDisplay.innerHTML = ufDisplayHtml; // Se inserta en el div
 
             updateInputPlaceholder();
             renderAndCalculate();
@@ -50,62 +55,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateInputPlaceholder() {
         const selectedCurrency = currencySelector.value;
         if (selectedCurrency === 'uf') amountInput.placeholder = 'Ej: 1';
-        else if (selectedCurrency === 'clp') amountInput.placeholder = 'Ej: 1.000';
+        else if (selectedCurrency === 'clp') amountInput.placeholder = 'Ej: 10.000'; // Ajustado para ser más representativo
         else if (selectedCurrency === 'usd') amountInput.placeholder = 'Ej: 10';
     }
 
-    // --- LÓGICA DE CÁLCULO REFACTORIZADA Y MÁS ROBUSTA ---
+    // --- LÓGICA DE CÁLCULO ---
     function renderAndCalculate() {
+        // ... (esta función se mantiene exactamente igual) ...
         const rawValue = amountInput.value.replace(/\./g, ''); 
         const amount = parseFloat(rawValue) || 0;
         const sourceCurrency = currencySelector.value;
-
-        // 1. Normalizar todo a un valor base: CLP
         let totalClp = 0;
         if (sourceCurrency === 'uf') totalClp = amount * rates.uf;
         else if (sourceCurrency === 'usd') totalClp = amount * rates.usd;
         else totalClp = amount;
-
-        // 2. Calcular todos los posibles valores a partir del CLP base
-        const allValues = {
-            CLP: totalClp,
-            UF: totalClp / rates.uf,
-            USD: totalClp / rates.usd,
-            EUR: totalClp / rates.eur,
-            ARS: (totalClp / rates.usd) * rates.ars,
-            COP: (totalClp / rates.usd) * rates.cop,
-        };
-
-        // 3. Decidir cuál es el resultado principal y cuáles los secundarios
+        const allValues = { CLP: totalClp, UF: totalClp / rates.uf, USD: totalClp / rates.usd, EUR: totalClp / rates.eur, ARS: (totalClp / rates.usd) * rates.ars, COP: (totalClp / rates.usd) * rates.cop };
         let primaryCode;
         if (sourceCurrency === 'clp') primaryCode = 'UF';
         else primaryCode = 'CLP';
-        
         const primaryResult = { code: primaryCode, value: allValues[primaryCode] };
-        
-        const secondaryCodes = ['USD', 'EUR', 'ARS', 'COP', 'UF', 'CLP'].filter(
-            code => code !== sourceCurrency.toUpperCase() && code !== primaryCode
-        );
+        const secondaryCodes = ['USD', 'EUR', 'ARS', 'COP', 'UF', 'CLP'].filter(code => code !== sourceCurrency.toUpperCase() && code !== primaryCode);
         const secondaryResults = secondaryCodes.map(code => ({ code, value: allValues[code] }));
-        
         displayResults(primaryResult, secondaryResults);
     }
 
     // --- FUNCIÓN PARA MOSTRAR LOS RESULTADOS EN EL HTML ---
     function displayResults(primary, secondaries) {
-        const formatters = {
-            CLP: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }),
-            USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
-            EUR: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }),
-            ARS: new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }),
-            COP: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }),
-            UF: new Intl.NumberFormat('es-CL', { minimumFractionDigits: 4, maximumFractionDigits: 4 }),
-        };
-        
+        // ... (esta función se mantiene exactamente igual) ...
+        const formatters = { CLP: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }), USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }), EUR: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }), ARS: new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }), COP: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }), UF: new Intl.NumberFormat('es-CL', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) };
         let html = `<div class="result-main" data-value="${primary.value}" data-code="${primary.code}"><h2>Equivalente en ${primary.code}</h2><p>${formatters[primary.code].format(primary.value)}</p></div><div class="secondary-results">`;
-        secondaries.forEach(result => {
-            html += `<div class="secondary-result" data-value="${result.value}" data-code="${result.code}"><h2>${result.code}</h2><p>${formatters[result.code].format(result.value)}</p></div>`;
-        });
+        secondaries.forEach(result => { html += `<div class="secondary-result" data-value="${result.value}" data-code="${result.code}"><h2>${result.code}</h2><p>${formatters[result.code].format(result.value)}</p></div>`; });
         html += `</div>`;
         resultsContainer.innerHTML = html;
         addCopyListeners();
@@ -113,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNCIÓN PARA COPIAR AL PORTAPAPELES ---
     function addCopyListeners() {
+        // ... (esta función se mantiene exactamente igual) ...
         document.querySelectorAll('[data-value]').forEach(element => {
             let timeoutId = null;
             element.addEventListener('click', () => {
@@ -135,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNCIÓN PARA FORMATEAR EL INPUT MIENTRAS SE ESCRIBE ---
     amountInput.addEventListener('input', () => {
+        // ... (esta función se mantiene exactamente igual) ...
         let value = amountInput.value;
         let numericValue = value.replace(/[^\d]/g, '');
         if (numericValue) amountInput.value = new Intl.NumberFormat('es-CL').format(numericValue);
