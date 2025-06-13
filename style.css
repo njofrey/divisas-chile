@@ -87,7 +87,6 @@ select { cursor: pointer; }
 .secondary-result h2 { font-size: 14px; margin: 0 0 5px 0; color: var(--text-secondary); }
 .secondary-result p { font-size: 18px; font-weight: 700; margin: 0; color: var(--text-primary); }
 
-/* Estilos para el nuevo pie de página */
 .footer {
     text-align: center;
     margin-top: 25px;
@@ -99,9 +98,17 @@ select { cursor: pointer; }
     font-size: 12px;
     margin: 0;
 }
+/* 1. Estilo para que "Con cariño" se vea más prominente */
+.credit .con-carino {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
 .data-source {
     color: var(--text-secondary);
     font-size: 10px;
     margin-top: 8px;
     font-style: italic;
+    /* 2. Opacidad para hacerlo más sutil */
+    opacity: 0.75;
 }
