@@ -3,21 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convertidor de Moneda</title>
+    
+    <title>Convertidor de Moneda Pro | by Nico Jofré</title>
+    <meta name="description" content="Un convertidor de moneda rápido y elegante que convierte UF, CLP y USD a múltiples divisas con valores actualizados.">
+    
+    <meta property="og:title" content="Convertidor de Moneda Pro">
+    <meta property="og:description" content="Convierte UF, CLP y USD a EUR, ARS, COP y más.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💱</text></svg>">
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="main-container">
         
         <div class="card">
             <h1>Convertidor de Moneda</h1>
-            <div class="uf-display" id="uf-rate-display">
-                Cargando valores...
-            </div>
-
+            <div class="uf-display" id="uf-rate-display">Cargando valores...</div>
             <div class="input-container">
                 <div class="input-group">
                     <label for="amount-input">Monto a Convertir</label>
@@ -32,13 +37,13 @@
                     </select>
                 </div>
             </div>
-
-            <div id="results-container">
-                </div>
+            <div id="results-container"></div>
         </div>
         
-        <p class="credit">Con cariño para Nico García <span style="color: black;">🖤</span> de Nicolás Jofré</p>
-
+        <div class="footer">
+            <p class="credit">Con cariño para Nico García <span style="color: black;">🖤</span> de Nicolás Jofré</p>
+            <p class="data-source">Datos obtenidos de mindicador.cl, bluelytics.com.ar y datos.gov.co</p>
+        </div>
     </div>
     
     <script src="script.js"></script>
