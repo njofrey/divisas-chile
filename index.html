@@ -10,30 +10,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="card">
-        <h1>Convertidor de Moneda</h1>
-        <p class="uf-display" id="uf-rate-display">Cargando valores...</p>
+    <div class="main-container">
+        
+        <div class="card">
+            <h1>Convertidor de Moneda</h1>
+            <p class="uf-display" id="uf-rate-display">Cargando valores...</p>
 
-        <div class="input-container">
-            <div class="input-group">
-                <label for="amount-input">Monto a Convertir</label>
-                <input type="text" inputmode="decimal" id="amount-input">
+            <div class="input-container">
+                <div class="input-group">
+                    <label for="amount-input">Monto a Convertir</label>
+                    <input type="text" inputmode="decimal" id="amount-input">
+                </div>
+                <div class="currency-selector-group">
+                    <label for="currency-selector">Desde</label>
+                    <select id="currency-selector">
+                        <option value="uf" selected>UF</option>
+                        <option value="clp">CLP</option>
+                        <option value="usd">USD</option>
+                    </select>
+                </div>
             </div>
-            <div class="currency-selector-group">
-                <label for="currency-selector">Desde</label>
-                <select id="currency-selector">
-                    <option value="uf" selected>UF</option>
-                    <option value="clp">CLP</option>
-                    <option value="usd">USD</option> </select>
-            </div>
+
+            <div id="results-container">
+                </div>
         </div>
-
-        <div id="results-container">
-            </div>
+        
+        <p class="credit">Con cariño para Nico García <span style="color: black;">🖤</span> de Nicolás Jofré</p>
 
     </div>
-    
-    <p class="credit">Con cariño para Nico García <span style="color: black;">🖤</span> de Nicolás Jofré</p>
     
     <script src="script.js"></script>
 </body>
