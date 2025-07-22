@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { code: 'ARS', value: (totalClp / rates.usd) * rates.ars },
                 { code: 'COP', value: (totalClp / rates.usd) * rates.cop },
             ];
-        } else {
+        } else if (sourceCurrency === 'clp') {
             const totalUf = amount / rates.uf;
             primaryResult = { code: 'UF', value: totalUf };
             secondaryResults = [
@@ -109,6 +109,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 { code: 'EUR', value: amount / rates.eur },
                 { code: 'ARS', value: (amount / rates.usd) * rates.ars },
                 { code: 'COP', value: (amount / rates.usd) * rates.cop },
+            ];
+        } else if (sourceCurrency === 'usd') {
+            const totalClp = amount * rates.usd;
+            primaryResult = { code: 'CLP', value: totalClp };
+            secondaryResults = [
+                { code: 'UF', value: totalClp / rates.uf },
+                { code: 'EUR', value: amount * rates.usd / rates.eur },
+                { code: 'ARS', value: amount * rates.ars },
+                { code: 'COP', value: amount * rates.cop },
             ];
         }
         displayResults(primaryResult, secondaryResults);

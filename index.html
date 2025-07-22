@@ -4,37 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;">
-    <title>Convertidor de Moneda</title>
+    
+    <title>Convertidor de Moneda Pro | by Nico Jofré</title>
+    <meta name="description" content="Un convertidor de moneda rápido y elegante que convierte UF, CLP y USD a múltiples divisas con valores actualizados.">
+    
+    <meta property="og:title" content="Convertidor de Moneda Pro">
+    <meta property="og:description" content="Convierte UF, CLP y USD a EUR, ARS, COP y más.">
+    <meta property="og:type" content="website">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💱</text></svg>">
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="card">
-        <h1>Convertidor de Moneda</h1>
-        <p class="uf-display" id="uf-rate-display">Cargando valor UF...</p>
+    <div class="main-container">
         
-        <div class="input-container">
-            <div class="input-group">
-                <label for="amount-input">Monto a Convertir</label>
-                <input type="text" inputmode="decimal" id="amount-input" placeholder="Ej: 1.000,50">
+        <div class="card">
+            <h1>Convertidor de Moneda</h1>
+            <div class="uf-display" id="uf-rate-display">Cargando valores...</div>
+            <div class="input-container">
+                <div class="input-group">
+                    <label for="amount-input">Monto a Convertir</label>
+                    <input type="text" inputmode="decimal" id="amount-input" placeholder="Ej: 1.000,50">
+                </div>
+                <div class="currency-selector-group">
+                    <label for="currency-selector">Desde</label>
+                    <select id="currency-selector">
+                        <option value="uf" selected>UF</option>
+                        <option value="clp">CLP</option>
+                        <option value="usd">USD</option>
+                    </select>
+                </div>
             </div>
-            <div class="currency-selector-group">
-                <label for="currency-selector">Desde</label>
-                <select id="currency-selector">
-                    <option value="uf" selected>UF</option>
-                    <option value="clp">CLP</option>
-                </select>
-            </div>
+            <div id="results-container"></div>
         </div>
-
-        <div id="results-container">
-            </div>
-
+        
+        <div class="footer">
+            <p class="credit">
+                Con cariño para Nico García <span style="color: black;">🖤</span> de Nicolás Jofré
+            </p>
+            <p class="data-source">Datos obtenidos de mindicador.cl, bluelytics.com.ar y datos.gov.co</p>
+        </div>
     </div>
-
-    <p class="credit">Hecho con ❤️ por Nicolás Jofré</p>
     
     <script src="script.js"></script>
 </body>
