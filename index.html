@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;">
+    <title>Convertidor de Moneda</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="card">
+        <h1>Convertidor de Moneda</h1>
+        <p class="uf-display" id="uf-rate-display">Cargando valor UF...</p>
+        
+        <div class="input-container">
+            <div class="input-group">
+                <label for="amount-input">Monto a Convertir</label>
+                <input type="text" inputmode="decimal" id="amount-input" placeholder="Ej: 1.000,50">
+            </div>
+            <div class="currency-selector-group">
+                <label for="currency-selector">Desde</label>
+                <select id="currency-selector">
+                    <option value="uf" selected>UF</option>
+                    <option value="clp">CLP</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="results-container">
+            </div>
+
+    </div>
+
+    <p class="credit">Hecho con ❤️ por Nicolás Jofré</p>
+    
+    <script src="script.js"></script>
+</body>
+</html>
