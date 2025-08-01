@@ -127,10 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayResults(primary, secondaries) {
         const formatters = {
             CLP: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }),
-            USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
-            EUR: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }),
-            ARS: new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }),
-            COP: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }),
+            USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 3 }),
+            EUR: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 3 }),
+            ARS: new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 3 }),
+            COP: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 3 }),
             UF: new Intl.NumberFormat('es-CL', { minimumFractionDigits: 4, maximumFractionDigits: 4 }),
         };
         
@@ -199,12 +199,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         maximumFractionDigits: 4 
                     }).format(valueToCopy);
                 } else {
-                    // Monedas con hasta 2 decimales si es necesario, usando puntos como separadores de miles
+                    // Monedas con hasta 3 decimales si es necesario, usando puntos como separadores de miles
                     const hasDecimals = valueToCopy % 1 !== 0;
                     if (hasDecimals) {
                         stringToCopy = new Intl.NumberFormat('es-CL', { 
                             minimumFractionDigits: 0,
-                            maximumFractionDigits: 2 
+                            maximumFractionDigits: 3 
                         }).format(valueToCopy);
                     } else {
                         stringToCopy = new Intl.NumberFormat('es-CL', { 
@@ -239,9 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let integerPart = parts[0].replace(/\./g, ''); // Quitar puntos de la parte entera
         let decimalPart = parts[1] || '';
         
-        // Limitar decimales a 2 dígitos
-        if (decimalPart.length > 2) {
-            decimalPart = decimalPart.substring(0, 2);
+        // Limitar decimales a 3 dígitos
+        if (decimalPart.length > 3) {
+            decimalPart = decimalPart.substring(0, 3);
         }
         
         // Formatear la parte entera con separadores de miles
