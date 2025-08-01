@@ -4,12 +4,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const currencySelector = document.getElementById('currency-selector');
     const resultsContainer = document.getElementById('results-container');
     const ufRateDisplay = document.getElementById('uf-rate-display');
+    
+    // --- Variables para UX mejorado ---
+    let debounceTimer = null;
 
     // --- Tasas de cambio ---
     let rates = { uf: 0, usd: 0, eur: 0, ars: 0, cop: 0 };
 
     // --- FUNCIÓN PRINCIPAL PARA OBTENER DATOS DE APIs (CON VALIDACIÓN) ---
     async function fetchAllRates() {
+        // Mostrar estado de carga mejorado
+        ufRateDisplay.classList.add('loading');
+        ufRateDisplay.textContent = 'Cargando valores...';
+        
         try {
             const [ufResponse, dolarResponse, euroResponse, arsResponse, copResponse] = await Promise.all([
                 fetch('https://mindicador.cl/api/uf'),
@@ -66,17 +73,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
             const formattedDate = today.toLocaleDateString('es-CL', dateOptions);
             const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
+            
+            // Remover estado de carga y mostrar valor
+            ufRateDisplay.classList.remove('loading');
             ufRateDisplay.textContent = `UF hoy ${formattedDate}: ${formattedUfValue}`;
 
             renderAndCalculate();
         } catch (error) {
-            // Error handling mejorado
+            // Error handling mejorado con animaciones
+            ufRateDisplay.classList.remove('loading');
             ufRateDisplay.textContent = 'Error al cargar el valor de la UF';
             resultsContainer.innerHTML = '';
-            const errorDiv = document.createElement('p');
-            errorDiv.textContent = 'Error al cargar las tasas de cambio. Inténtalo más tarde.';
-            errorDiv.style.color = '#d32f2f';
-            errorDiv.style.textAlign = 'center';
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-state';
+            errorDiv.innerHTML = `
+                <h3 style="margin: 0 0 10px 0; font-size: 16px;">⚠️ Error de Conexión</h3>
+                <p style="margin: 0; font-size: 14px;">No se pudieron cargar las tasas de cambio. Verifica tu conexión e inténtalo más tarde.</p>
+            `;
             resultsContainer.appendChild(errorDiv);
             console.error("Error fetching rates:", error);
         }
@@ -215,10 +229,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 navigator.clipboard.writeText(stringToCopy)
                     .then(() => {
+                        // Feedback háptico para móviles
+                        if (navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
+                        
                         const originalText = element.querySelector('p').innerText;
-                        element.querySelector('p').innerText = '¡Copiado!';
+                        const valueElement = element.querySelector('p');
+                        
+                        // Crear elemento de feedback visual mejorado
+                        const feedbackElement = document.createElement('span');
+                        feedbackElement.className = 'success-feedback';
+                        feedbackElement.textContent = '✓ ¡Copiado!';
+                        feedbackElement.style.position = 'absolute';
+                        feedbackElement.style.top = '50%';
+                        feedbackElement.style.left = '50%';
+                        feedbackElement.style.transform = 'translate(-50%, -50%)';
+                        feedbackElement.style.zIndex = '10';
+                        
+                        element.style.position = 'relative';
+                        element.appendChild(feedbackElement);
+                        
                         const newTimeoutId = setTimeout(() => {
-                            element.querySelector('p').innerText = originalText;
+                            if (feedbackElement.parentNode) {
+                                feedbackElement.remove();
+                            }
                         }, 1200);
                         element.dataset.timeoutId = newTimeoutId;
                     })
@@ -227,8 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- FUNCIÓN PARA FORMATEAR EL INPUT MIENTRAS SE ESCRIBE ---
-    amountInput.addEventListener('input', (e) => {
+    // --- FUNCIÓN PARA FORMATEAR EL INPUT MIENTRAS SE ESCRIBE (CON DEBOUNCE) ---
+    function handleInputChange(e) {
         let value = e.target.value;
         
         // Permitir números, puntos y comas
@@ -257,8 +292,14 @@ document.addEventListener('DOMContentLoaded', () => {
             e.target.value = integerPart;
         }
         
-        renderAndCalculate();
-    });
+        // Debounce para optimizar performance
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            renderAndCalculate();
+        }, 150); // 150ms de delay
+    }
+    
+    amountInput.addEventListener('input', handleInputChange);
 
     // --- INICIALIZACIÓN ---
     currencySelector.addEventListener('change', renderAndCalculate);

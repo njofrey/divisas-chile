@@ -109,6 +109,155 @@ select {
     cursor: pointer;
 }
 
+/* ===== MEJORAS UX/UI AVANZADAS ===== */
+
+/* 1. Estados de carga skeleton */
+.loading-skeleton {
+    background: linear-gradient(90deg, 
+        var(--border-color) 25%, 
+        rgba(222, 226, 230, 0.5) 50%, 
+        var(--border-color) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 20px;
+    margin: 5px 0;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@media (prefers-color-scheme: dark) {
+    .loading-skeleton {
+        background: linear-gradient(90deg, 
+            var(--border-color) 25%, 
+            rgba(58, 58, 60, 0.5) 50%, 
+            var(--border-color) 75%);
+    }
+}
+
+/* 2. Focus states mejorados */
+input:focus, select:focus {
+    outline: none;
+    border-color: #036497;
+    box-shadow: 0 0 0 3px rgba(3, 100, 151, 0.1);
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* 3. Animaciones de entrada para resultados */
+.result-main, .secondary-result {
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+/* 4. Indicadores de copiado mejorados */
+.result-main, .secondary-result {
+    position: relative;
+    overflow: hidden;
+}
+
+.result-main::before, .secondary-result::before {
+    content: "📋 Clic para copiar";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.result-main:hover::before, .secondary-result:hover::before {
+    opacity: 1;
+}
+
+/* 5. Estados de error mejorados */
+.error-state {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    animation: shake 0.5s ease-in-out, fadeIn 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* 6. Hover mejorados con más fluidez */
+.result-main:hover, .secondary-result:hover {
+    transform: scale(1.03) translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* 7. Loading state para UF display */
+.uf-display.loading {
+    background: var(--border-color);
+    color: transparent;
+    border-radius: 8px;
+    animation: loading 1.5s infinite;
+}
+
+/* 8. Transiciones suaves globales */
+* {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+/* 9. Estados de éxito para feedback */
+.success-feedback {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 10. Mejoras responsivas adicionales */
+@media (max-width: 480px) {
+    .result-main::before, .secondary-result::before {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+    
+    .result-main:hover, .secondary-result:hover {
+        transform: scale(1.02) translateY(-1px);
+    }
+}
+
 .result-main {
     background-color: #e6f7ff;
     border: 1px solid #91d5ff;

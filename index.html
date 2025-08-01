@@ -18,6 +18,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
 </head>
 <body>
     <div class="main-container">
@@ -28,18 +43,21 @@
             <div class="input-container">
                 <div class="input-group">
                     <label for="amount-input">Monto a Convertir</label>
-                    <input type="text" inputmode="decimal" id="amount-input" placeholder="Ej: 1.000,50">
+                    <input type="text" inputmode="decimal" id="amount-input" placeholder="Ej: 1.000,50" 
+                           aria-label="Monto a convertir" role="textbox" 
+                           aria-describedby="amount-help">
+                    <div id="amount-help" class="sr-only">Ingresa el monto que deseas convertir usando punto para miles y coma para decimales</div>
                 </div>
                 <div class="currency-selector-group">
                     <label for="currency-selector">Desde</label>
-                    <select id="currency-selector">
-                        <option value="uf" selected>UF</option>
-                        <option value="clp">CLP</option>
-                        <option value="usd">USD</option>
+                    <select id="currency-selector" aria-label="Seleccionar moneda de origen">
+                        <option value="uf" selected>UF (Unidad de Fomento)</option>
+                        <option value="clp">CLP (Peso Chileno)</option>
+                        <option value="usd">USD (Dólar Estadounidense)</option>
                     </select>
                 </div>
             </div>
-            <div id="results-container"></div>
+            <div id="results-container" role="region" aria-live="polite" aria-label="Resultados de conversión"></div>
         </div>
         
         <div class="footer">
