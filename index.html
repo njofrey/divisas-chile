@@ -26,17 +26,18 @@
             <h1>Convertidor de Moneda</h1>
             <div class="uf-display" id="uf-rate-display">Cargando valores...</div>
             <div class="input-container">
-                <div class="input-group">
+                <div class="amount-input-section">
                     <label for="amount-input">Monto a Convertir</label>
                     <input type="text" inputmode="decimal" id="amount-input" placeholder="Ej: 1.000,50">
                 </div>
-                <div class="currency-selector-group">
-                    <label for="currency-selector">Desde</label>
-                    <select id="currency-selector">
-                        <option value="uf" selected>UF</option>
-                        <option value="clp">CLP</option>
-                        <option value="usd">USD</option>
-                    </select>
+                <div class="currency-selector-section">
+                    <label>Desde</label>
+                    <div id="currency-selector" class="currency-pills">
+                        <button class="pill active" data-value="uf">UF</button>
+                        <button class="pill" data-value="clp">CLP</button>
+                        <button class="pill" data-value="usd">USD</button>
+                        <button class="pill" data-value="cop">COP</button>
+                    </div>
                 </div>
             </div>
             <div id="results-container"></div>

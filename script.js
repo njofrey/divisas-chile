@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Regex mejorado: remover separadores de miles pero preservar coma decimal
         rawValue = rawValue.replace(/\.(?=\d{3}(?!\d))/g, '').replace(/,/, '.');
         const amount = parseFloat(rawValue) || 0;
-        const sourceCurrency = currencySelector.value;
+        const sourceCurrency = document.querySelector('.currency-pills .pill.active').dataset.value;
         
         let primaryResult, secondaryResults;
 
@@ -119,6 +119,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 { code: 'ARS', value: amount * rates.ars },
                 { code: 'COP', value: amount * rates.cop },
             ];
+        } else if (sourceCurrency === 'cop') {
+            const amountInUsd = amount / rates.cop;
+            const totalClp = amountInUsd * rates.usd;
+            primaryResult = { code: 'CLP', value: totalClp };
+            secondaryResults = [
+                { code: 'UF', value: totalClp / rates.uf },
+                { code: 'USD', value: amountInUsd },
+                { code: 'EUR', value: totalClp / rates.eur },
+                { code: 'ARS', value: amountInUsd * rates.ars },
+            ];
         }
         displayResults(primaryResult, secondaryResults);
     }
@@ -127,11 +137,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayResults(primary, secondaries) {
         const formatters = {
             CLP: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }),
-            USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 3 }),
-            EUR: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 3 }),
-            ARS: new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 3 }),
-            COP: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 3 }),
-            UF: new Intl.NumberFormat('es-CL', { minimumFractionDigits: 4, maximumFractionDigits: 4 }),
+            USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }),
+            EUR: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }),
+            ARS: new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }),
+            COP: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }),
+            UF: new Intl.NumberFormat('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
         };
         
         // Limpiar contenedor
@@ -191,26 +201,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const code = element.getAttribute('data-code');
                 let stringToCopy;
 
-                // Formatear para copia con puntos como separadores de miles
+                // Formatear para copia usando los mismos formatos que la visualización
                 if (code === 'UF') {
-                    // UF mantiene 4 decimales
                     stringToCopy = new Intl.NumberFormat('es-CL', { 
-                        minimumFractionDigits: 4, 
+                        minimumFractionDigits: 2, 
                         maximumFractionDigits: 4 
                     }).format(valueToCopy);
+                } else if (code === 'ARS' || code === 'COP' || code === 'CLP') {
+                    // Monedas sin decimales
+                    stringToCopy = new Intl.NumberFormat('es-CL', { 
+                        maximumFractionDigits: 0 
+                    }).format(valueToCopy);
                 } else {
-                    // Monedas con hasta 3 decimales si es necesario, usando puntos como separadores de miles
-                    const hasDecimals = valueToCopy % 1 !== 0;
-                    if (hasDecimals) {
-                        stringToCopy = new Intl.NumberFormat('es-CL', { 
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 3 
-                        }).format(valueToCopy);
-                    } else {
-                        stringToCopy = new Intl.NumberFormat('es-CL', { 
-                            maximumFractionDigits: 0 
-                        }).format(valueToCopy);
-                    }
+                    // USD y EUR con hasta 2 decimales
+                    stringToCopy = new Intl.NumberFormat('es-CL', { 
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2 
+                    }).format(valueToCopy);
                 }
                 
                 navigator.clipboard.writeText(stringToCopy)
@@ -244,9 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
             decimalPart = decimalPart.substring(0, 3);
         }
         
-        // Formatear la parte entera con separadores de miles
-        if (integerPart) {
-            integerPart = new Intl.NumberFormat('es-CL').format(parseInt(integerPart));
+        // Limitar el valor máximo a 99 millones
+        const maxValue = 99000000;
+        const numericValue = parseInt(integerPart.replace(/\./g, '')) || 0;
+        if (numericValue > maxValue) {
+            integerPart = new Intl.NumberFormat('es-CL').format(maxValue);
+        } else if (integerPart) {
+            integerPart = new Intl.NumberFormat('es-CL').format(parseInt(integerPart.replace(/\./g, '')));
         }
         
         // Reconstruir el valor
@@ -261,6 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- INICIALIZACIÓN ---
-    currencySelector.addEventListener('change', renderAndCalculate);
+    document.querySelectorAll('.currency-pills .pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelector('.currency-pills .pill.active').classList.remove('active');
+            pill.classList.add('active');
+            renderAndCalculate();
+        });
+    });
     fetchAllRates();
 });
