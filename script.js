@@ -1,14 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Elementos del DOM ---
     const amountInput = document.getElementById('amount-input');
     const currencySelector = document.getElementById('currency-selector');
     const resultsContainer = document.getElementById('results-container');
     const ufRateDisplay = document.getElementById('uf-rate-display');
 
-    // --- Tasas de cambio ---
     let rates = { uf: 0, usd: 0, eur: 0, ars: 0, cop: 0 };
 
-    // --- FUNCIÓN PRINCIPAL PARA OBTENER DATOS DE APIs (CON VALIDACIÓN) ---
     async function fetchAllRates() {
         try {
             const [ufResponse, dolarResponse, euroResponse, arsResponse, copResponse] = await Promise.all([
@@ -19,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('https://www.datos.gov.co/resource/mcec-87by.json')
             ]);
             
-            // Validar respuestas HTTP
             if (!ufResponse.ok || !dolarResponse.ok || !euroResponse.ok || !arsResponse.ok || !copResponse.ok) {
                 throw new Error('Error en la respuesta de una o más APIs');
             }
@@ -30,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const arsData = await arsResponse.json();
             const copData = await copResponse.json();
             
-            // Validar y asignar datos de forma segura
             if (ufData?.serie?.[0]?.valor && typeof ufData.serie[0].valor === 'number') {
                 rates.uf = ufData.serie[0].valor;
             } else {
@@ -61,16 +56,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Datos de COP inválidos');
             }
             
-            // Mostrar UF del día de forma segura
             const today = new Date();
             const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
             const formattedDate = today.toLocaleDateString('es-CL', dateOptions);
             const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
-            ufRateDisplay.textContent = `UF hoy ${formattedDate}: ${formattedUfValue}`;
+            ufRateDisplay.innerHTML = `UF hoy: ${formattedUfValue}<br><span class="uf-date">${formattedDate}</span>`;
 
             renderAndCalculate();
         } catch (error) {
-            // Error handling mejorado
             ufRateDisplay.textContent = 'Error al cargar el valor de la UF';
             resultsContainer.innerHTML = '';
             const errorDiv = document.createElement('p');
@@ -82,10 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- FUNCIÓN PARA CALCULAR Y MOSTRAR RESULTADOS (PARSING MEJORADO) ---
     function renderAndCalculate() {
         let rawValue = amountInput.value;
-        // Regex mejorado: remover separadores de miles pero preservar coma decimal
         rawValue = rawValue.replace(/\.(?=\d{3}(?!\d))/g, '').replace(/,/, '.');
         const amount = parseFloat(rawValue) || 0;
         const sourceCurrency = document.querySelector('.currency-pills .pill.active').dataset.value;
@@ -133,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         displayResults(primaryResult, secondaryResults);
     }
 
-    // --- FUNCIÓN PARA MOSTRAR LOS RESULTADOS EN EL HTML (VERSIÓN SEGURA) ---
     function displayResults(primary, secondaries) {
         const formatters = {
             CLP: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }),
@@ -144,10 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
             UF: new Intl.NumberFormat('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
         };
         
-        // Limpiar contenedor
         resultsContainer.innerHTML = '';
         
-        // Crear elemento principal de forma segura
         const mainResult = document.createElement('div');
         mainResult.className = 'result-main';
         mainResult.setAttribute('data-value', primary.value);
@@ -163,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mainResult.appendChild(mainValue);
         resultsContainer.appendChild(mainResult);
         
-        // Crear contenedor de resultados secundarios
         const secondaryContainer = document.createElement('div');
         secondaryContainer.className = 'secondary-results';
         
@@ -188,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addCopyListeners();
     }
 
-    // --- FUNCIÓN PARA COPIAR AL PORTAPAPELES (VERSIÓN CON FORMATO MEJORADO) ---
     function addCopyListeners() {
         document.querySelectorAll('[data-value]').forEach(element => {
             let timeoutId = null;
@@ -201,19 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const code = element.getAttribute('data-code');
                 let stringToCopy;
 
-                // Formatear para copia usando los mismos formatos que la visualización
                 if (code === 'UF') {
                     stringToCopy = new Intl.NumberFormat('es-CL', { 
                         minimumFractionDigits: 2, 
                         maximumFractionDigits: 4 
                     }).format(valueToCopy);
                 } else if (code === 'ARS' || code === 'COP' || code === 'CLP') {
-                    // Monedas sin decimales
                     stringToCopy = new Intl.NumberFormat('es-CL', { 
                         maximumFractionDigits: 0 
                     }).format(valueToCopy);
                 } else {
-                    // USD y EUR con hasta 2 decimales
                     stringToCopy = new Intl.NumberFormat('es-CL', { 
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 2 
@@ -223,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 navigator.clipboard.writeText(stringToCopy)
                     .then(() => {
                         const originalText = element.querySelector('p').innerText;
-                        element.querySelector('p').innerText = '¡Copiado!';
+                        element.querySelector('p').innerText = 'Copiado!';
                         const newTimeoutId = setTimeout(() => {
                             element.querySelector('p').innerText = originalText;
                         }, 1200);
@@ -234,24 +217,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- FUNCIÓN PARA FORMATEAR EL INPUT MIENTRAS SE ESCRIBE ---
     amountInput.addEventListener('input', (e) => {
         let value = e.target.value;
-        
-        // Permitir números, puntos y comas
         let cleanValue = value.replace(/[^\d.,]/g, '');
-        
-        // Si hay una coma, separarla en parte entera y decimal
         let parts = cleanValue.split(',');
-        let integerPart = parts[0].replace(/\./g, ''); // Quitar puntos de la parte entera
+        let integerPart = parts[0].replace(/\./g, '');
         let decimalPart = parts[1] || '';
         
-        // Limitar decimales a 3 dígitos
         if (decimalPart.length > 3) {
             decimalPart = decimalPart.substring(0, 3);
         }
         
-        // Limitar el valor máximo a 99 millones
         const maxValue = 99000000;
         const numericValue = parseInt(integerPart.replace(/\./g, '')) || 0;
         if (numericValue > maxValue) {
@@ -260,9 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
             integerPart = new Intl.NumberFormat('es-CL').format(parseInt(integerPart.replace(/\./g, '')));
         }
         
-        // Reconstruir el valor
         if (parts.length > 1 || value.includes(',')) {
-            // Si hay coma o se escribió una coma
             e.target.value = integerPart + (parts.length > 1 ? ',' + decimalPart : ',');
         } else {
             e.target.value = integerPart;
@@ -271,13 +245,39 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAndCalculate();
     });
 
-    // --- INICIALIZACIÓN ---
+    // Restaurar última moneda seleccionada
+    const savedCurrency = localStorage.getItem('selectedCurrency');
+    if (savedCurrency) {
+        const currentActive = document.querySelector('.currency-pills .pill.active');
+        const savedPill = document.querySelector(`.currency-pills .pill[data-value="${savedCurrency}"]`);
+        if (savedPill && currentActive !== savedPill) {
+            currentActive.classList.remove('active');
+            savedPill.classList.add('active');
+        }
+    }
+    
+    function updatePlaceholder() {
+        const activeCurrency = document.querySelector('.currency-pills .pill.active').dataset.value;
+        const placeholders = {
+            'uf': 'Ej: 100 UF',
+            'clp': 'Ej: 1.000.000',
+            'usd': 'Ej: 500',
+            'cop': 'Ej: 1.400.000',
+            'ars': 'Ej: 300.000'
+        };
+        amountInput.placeholder = placeholders[activeCurrency] || 'Ej: 1.000,50';
+    }
+    
     document.querySelectorAll('.currency-pills .pill').forEach(pill => {
         pill.addEventListener('click', () => {
             document.querySelector('.currency-pills .pill.active').classList.remove('active');
             pill.classList.add('active');
+            localStorage.setItem('selectedCurrency', pill.dataset.value);
+            updatePlaceholder();
             renderAndCalculate();
         });
     });
+    
+    updatePlaceholder();
     fetchAllRates();
 });
