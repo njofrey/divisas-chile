@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const amount = parseFloat(rawValue) || 0;
         const sourceCurrency = document.querySelector('.currency-pills .pill.active').dataset.value;
         
+        
         let primaryResult, secondaryResults;
 
         if (sourceCurrency === 'uf') {
@@ -185,6 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const valueToCopy = parseFloat(element.getAttribute('data-value'));
                 const code = element.getAttribute('data-code');
+                
+                // No permitir copiar si el valor es 0 y hacer shake
+                if (valueToCopy === 0) {
+                    element.classList.add('shake');
+                    setTimeout(() => element.classList.remove('shake'), 350);
+                    return;
+                }
                 let stringToCopy;
 
                 if (code === 'UF') {
@@ -228,7 +236,17 @@ document.addEventListener('DOMContentLoaded', () => {
             decimalPart = decimalPart.substring(0, 3);
         }
         
-        const maxValue = 99000000;
+        // Límites máximos por moneda basados en transacciones inmobiliarias típicas
+        const activeCurrency = document.querySelector('.currency-pills .pill.active').dataset.value;
+        const maxLimits = {
+            'clp': 2000000000,   // 2,000 millones CLP
+            'usd': 5000000,      // 5 millones USD
+            'uf': 99000,         // 99,000 UF
+            'cop': 2500000000,   // 2,500 millones COP (aprox. 500k USD)
+            'ars': 2000000000    // 2 mil millones ARS
+        };
+        
+        const maxValue = maxLimits[activeCurrency] || 99000000;
         const numericValue = parseInt(integerPart.replace(/\./g, '')) || 0;
         if (numericValue > maxValue) {
             integerPart = new Intl.NumberFormat('es-CL').format(maxValue);
@@ -240,6 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
             e.target.value = integerPart + (parts.length > 1 ? ',' + decimalPart : ',');
         } else {
             e.target.value = integerPart;
+        }
+        
+        // Shake si el usuario borra todo el input
+        if (!e.target.value) {
+            resultsContainer.classList.add('shake');
+            setTimeout(() => resultsContainer.classList.remove('shake'), 350);
         }
         
         renderAndCalculate();
