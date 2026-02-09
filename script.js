@@ -6,72 +6,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rates = { uf: 0, usd: 0, eur: 0, ars: 0, cop: 0 };
 
-    async function fetchAllRates() {
-        try {
-            const [ufResponse, dolarResponse, euroResponse, arsResponse, copResponse] = await Promise.all([
-                fetch('https://mindicador.cl/api/uf'),
-                fetch('https://mindicador.cl/api/dolar'),
-                fetch('https://mindicador.cl/api/euro'),
-                fetch('https://api.bluelytics.com.ar/v2/latest'),
-                fetch('https://www.datos.gov.co/resource/mcec-87by.json')
-            ]);
-            
-            if (!ufResponse.ok || !dolarResponse.ok || !euroResponse.ok || !arsResponse.ok || !copResponse.ok) {
-                throw new Error('Error en la respuesta de una o más APIs');
-            }
-            
-            const ufData = await ufResponse.json();
-            const dolarData = await dolarResponse.json();
-            const euroData = await euroResponse.json();
-            const arsData = await arsResponse.json();
-            const copData = await copResponse.json();
-            
-            if (ufData?.serie?.[0]?.valor && typeof ufData.serie[0].valor === 'number') {
-                rates.uf = ufData.serie[0].valor;
-            } else {
-                throw new Error('Datos de UF inválidos');
-            }
-            
-            if (dolarData?.serie?.[0]?.valor && typeof dolarData.serie[0].valor === 'number') {
-                rates.usd = dolarData.serie[0].valor;
-            } else {
-                throw new Error('Datos de USD inválidos');
-            }
-            
-            if (euroData?.serie?.[0]?.valor && typeof euroData.serie[0].valor === 'number') {
-                rates.eur = euroData.serie[0].valor;
-            } else {
-                throw new Error('Datos de EUR inválidos');
-            }
-            
-            if (arsData?.blue?.value_sell && typeof arsData.blue.value_sell === 'number') {
-                rates.ars = arsData.blue.value_sell;
-            } else {
-                throw new Error('Datos de ARS inválidos');
-            }
-            
-            if (copData?.[0]?.valor && !isNaN(parseFloat(copData[0].valor))) {
-                rates.cop = parseFloat(copData[0].valor);
-            } else {
-                throw new Error('Datos de COP inválidos');
-            }
-            
-            const today = new Date();
-            const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-            const formattedDate = today.toLocaleDateString('es-CL', dateOptions);
-            const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
-            ufRateDisplay.innerHTML = `UF hoy: ${formattedUfValue}<br><span class="uf-date">${formattedDate}</span>`;
+    function applyRates(newRates) {
+        rates = newRates;
+        const today = new Date();
+        const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+        const formattedDate = today.toLocaleDateString('es-CL', dateOptions);
+        const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
+        ufRateDisplay.innerHTML = `UF hoy: ${formattedUfValue}<br><span class="uf-date">${formattedDate}</span>`;
+        renderAndCalculate();
+    }
 
-            renderAndCalculate();
-        } catch (error) {
-            ufRateDisplay.textContent = 'Error al cargar el valor de la UF';
-            resultsContainer.innerHTML = '';
-            const errorDiv = document.createElement('p');
-            errorDiv.textContent = 'Error al cargar las tasas de cambio. Inténtalo más tarde.';
-            errorDiv.style.color = '#d32f2f';
-            errorDiv.style.textAlign = 'center';
-            resultsContainer.appendChild(errorDiv);
-            console.error("Error fetching rates:", error);
+    function showError() {
+        ufRateDisplay.textContent = 'Error al cargar el valor de la UF';
+        resultsContainer.innerHTML = '';
+        const errorDiv = document.createElement('p');
+        errorDiv.textContent = 'Error al cargar las tasas de cambio. Inténtalo más tarde.';
+        errorDiv.style.color = '#d32f2f';
+        errorDiv.style.textAlign = 'center';
+        resultsContainer.appendChild(errorDiv);
+    }
+
+    async function fetchDirectRates() {
+        const [ufResponse, dolarResponse, euroResponse, arsResponse, copResponse] = await Promise.all([
+            fetch('https://mindicador.cl/api/uf'),
+            fetch('https://mindicador.cl/api/dolar'),
+            fetch('https://mindicador.cl/api/euro'),
+            fetch('https://api.bluelytics.com.ar/v2/latest'),
+            fetch('https://www.datos.gov.co/resource/mcec-87by.json')
+        ]);
+
+        if (!ufResponse.ok || !dolarResponse.ok || !euroResponse.ok || !arsResponse.ok || !copResponse.ok) {
+            throw new Error('Error en la respuesta de una o más APIs');
+        }
+
+        const [ufData, dolarData, euroData, arsData, copData] = await Promise.all([
+            ufResponse.json(), dolarResponse.json(), euroResponse.json(), arsResponse.json(), copResponse.json()
+        ]);
+
+        if (!ufData?.serie?.[0]?.valor || typeof ufData.serie[0].valor !== 'number') throw new Error('Datos de UF inválidos');
+        if (!dolarData?.serie?.[0]?.valor || typeof dolarData.serie[0].valor !== 'number') throw new Error('Datos de USD inválidos');
+        if (!euroData?.serie?.[0]?.valor || typeof euroData.serie[0].valor !== 'number') throw new Error('Datos de EUR inválidos');
+        if (!arsData?.blue?.value_sell || typeof arsData.blue.value_sell !== 'number') throw new Error('Datos de ARS inválidos');
+        if (!copData?.[0]?.valor || isNaN(parseFloat(copData[0].valor))) throw new Error('Datos de COP inválidos');
+
+        return {
+            uf: ufData.serie[0].valor,
+            usd: dolarData.serie[0].valor,
+            eur: euroData.serie[0].valor,
+            ars: arsData.blue.value_sell,
+            cop: parseFloat(copData[0].valor)
+        };
+    }
+
+    async function fetchAllRates() {
+        const cached = localStorage.getItem('rates_cache');
+        if (cached) {
+            const { rates: cachedRates, fecha } = JSON.parse(cached);
+            if (fecha === new Date().toDateString() && cachedRates.uf) applyRates(cachedRates);
+        }
+
+        try {
+            const res = await fetch('/api/rates');
+            if (!res.ok) throw new Error('Proxy failed');
+            const newRates = await res.json();
+            localStorage.setItem('rates_cache', JSON.stringify({ rates: newRates, fecha: new Date().toDateString() }));
+            applyRates(newRates);
+        } catch {
+            try {
+                const newRates = await fetchDirectRates();
+                localStorage.setItem('rates_cache', JSON.stringify({ rates: newRates, fecha: new Date().toDateString() }));
+                applyRates(newRates);
+            } catch (error) {
+                if (rates.uf === 0) showError();
+                console.error("Error fetching rates:", error);
+            }
         }
     }
 
