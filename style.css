@@ -71,6 +71,18 @@ h1 {
     margin-top: 4px;
 }
 
+.uf-display .uf-stale {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #d97706;
+}
+
+@media (prefers-color-scheme: dark) {
+    .uf-display .uf-stale { color: #fbbf24; }
+}
+
 .input-container {
     display: flex;
     flex-direction: column;

@@ -1,11 +1,11 @@
 export default async function handler(req, res) {
     try {
         const results = await Promise.allSettled([
-            fetch('https://mindicador.cl/api/uf', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://mindicador.cl/api/dolar', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://mindicador.cl/api/euro', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://api.bluelytics.com.ar/v2/latest', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://www.datos.gov.co/resource/mcec-87by.json', { signal: AbortSignal.timeout(5000) })
+            fetch('https://mindicador.cl/api/uf', { signal: AbortSignal.timeout(9000) }),
+            fetch('https://mindicador.cl/api/dolar', { signal: AbortSignal.timeout(9000) }),
+            fetch('https://mindicador.cl/api/euro', { signal: AbortSignal.timeout(9000) }),
+            fetch('https://api.bluelytics.com.ar/v2/latest', { signal: AbortSignal.timeout(9000) }),
+            fetch('https://www.datos.gov.co/resource/mcec-87by.json', { signal: AbortSignal.timeout(9000) })
         ]);
 
         // Intenta parsear JSON solo si fulfilled y ok
@@ -42,6 +42,7 @@ export default async function handler(req, res) {
         res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
         res.status(200).json(rates);
     } catch (error) {
+        res.setHeader('Cache-Control', 'no-store');
         res.status(500).json({ error: 'No se pudieron obtener las tasas de cambio' });
     }
 }

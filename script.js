@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rates = { uf: null, usd: null, eur: null, ars: null, cop: null };
 
-    function applyRates(newRates) {
+    function applyRates(newRates, isStale = false) {
         rates = newRates;
         const today = new Date();
         const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
             ufRateDisplay.innerHTML = `UF hoy: ${formattedUfValue}<br><span class="uf-date">${formattedDate}</span>`;
+        }
+        if (isStale) {
+            ufRateDisplay.innerHTML += `<span class="uf-stale">⚠ Valores desactualizados — servicio no disponible</span>`;
         }
         renderAndCalculate();
     }
@@ -32,11 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchDirectRates() {
         const results = await Promise.allSettled([
-            fetch('https://mindicador.cl/api/uf', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://mindicador.cl/api/dolar', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://mindicador.cl/api/euro', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://api.bluelytics.com.ar/v2/latest', { signal: AbortSignal.timeout(5000) }),
-            fetch('https://www.datos.gov.co/resource/mcec-87by.json', { signal: AbortSignal.timeout(5000) })
+            fetch('https://mindicador.cl/api/uf', { signal: AbortSignal.timeout(10000) }),
+            fetch('https://mindicador.cl/api/dolar', { signal: AbortSignal.timeout(10000) }),
+            fetch('https://mindicador.cl/api/euro', { signal: AbortSignal.timeout(10000) }),
+            fetch('https://api.bluelytics.com.ar/v2/latest', { signal: AbortSignal.timeout(10000) }),
+            fetch('https://www.datos.gov.co/resource/mcec-87by.json', { signal: AbortSignal.timeout(10000) })
         ]);
 
         // Parse JSON solo si fulfilled y ok
@@ -87,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const res = await fetch('/api/rates', { signal: AbortSignal.timeout(5000) });
+            const res = await fetch('/api/rates', { signal: AbortSignal.timeout(10000) });
             if (!res.ok) throw new Error('Proxy failed');
             const newRates = await res.json();
             safeCache(newRates);
@@ -98,8 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 safeCache(newRates);
                 applyRates(newRates);
             } catch (error) {
-                if (!hasAnyRate(rates)) showError();
                 console.error("Error fetching rates:", error);
+                if (!hasAnyRate(rates) && cached) {
+                    try {
+                        const { rates: staleRates } = JSON.parse(cached);
+                        if (hasAnyRate(staleRates)) {
+                            applyRates(staleRates, true);
+                            return;
+                        }
+                    } catch {}
+                }
+                if (!hasAnyRate(rates)) showError();
             }
         }
     }
