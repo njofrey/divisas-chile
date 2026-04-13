@@ -4,15 +4,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('results-container');
     const ufRateDisplay = document.getElementById('uf-rate-display');
 
-    let rates = { uf: 0, usd: 0, eur: 0, ars: 0, cop: 0 };
+    let rates = { uf: null, usd: null, eur: null, ars: null, cop: null };
 
     function applyRates(newRates) {
         rates = newRates;
         const today = new Date();
         const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
         const formattedDate = today.toLocaleDateString('es-CL', dateOptions);
-        const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
-        ufRateDisplay.innerHTML = `UF hoy: ${formattedUfValue}<br><span class="uf-date">${formattedDate}</span>`;
+        if (rates.uf === null || rates.uf === undefined) {
+            ufRateDisplay.innerHTML = `UF no disponible<br><span class="uf-date">${formattedDate}</span>`;
+        } else {
+            const formattedUfValue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(rates.uf);
+            ufRateDisplay.innerHTML = `UF hoy: ${formattedUfValue}<br><span class="uf-date">${formattedDate}</span>`;
+        }
         renderAndCalculate();
     }
 
@@ -27,57 +31,74 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchDirectRates() {
-        const [ufResponse, dolarResponse, euroResponse, arsResponse, copResponse] = await Promise.all([
-            fetch('https://mindicador.cl/api/uf'),
-            fetch('https://mindicador.cl/api/dolar'),
-            fetch('https://mindicador.cl/api/euro'),
-            fetch('https://api.bluelytics.com.ar/v2/latest'),
-            fetch('https://www.datos.gov.co/resource/mcec-87by.json')
+        const results = await Promise.allSettled([
+            fetch('https://mindicador.cl/api/uf', { signal: AbortSignal.timeout(5000) }),
+            fetch('https://mindicador.cl/api/dolar', { signal: AbortSignal.timeout(5000) }),
+            fetch('https://mindicador.cl/api/euro', { signal: AbortSignal.timeout(5000) }),
+            fetch('https://api.bluelytics.com.ar/v2/latest', { signal: AbortSignal.timeout(5000) }),
+            fetch('https://www.datos.gov.co/resource/mcec-87by.json', { signal: AbortSignal.timeout(5000) })
         ]);
 
-        if (!ufResponse.ok || !dolarResponse.ok || !euroResponse.ok || !arsResponse.ok || !copResponse.ok) {
-            throw new Error('Error en la respuesta de una o más APIs');
+        // Parse JSON solo si fulfilled y ok
+        const parsed = await Promise.all(results.map(async (r) => {
+            if (r.status === 'fulfilled' && r.value.ok) {
+                try { return await r.value.json(); } catch { return null; }
+            }
+            return null;
+        }));
+
+        const [ufData, dolarData, euroData, arsData, copData] = parsed;
+        const isValidNum = (v) => typeof v === 'number' && Number.isFinite(v);
+
+        const ufValue = ufData?.serie?.[0]?.valor;
+        const usdValue = dolarData?.serie?.[0]?.valor;
+        const eurValue = euroData?.serie?.[0]?.valor;
+        const arsValue = arsData?.blue?.value_sell;
+        const copRaw = copData?.[0]?.valor;
+        const copValue = copRaw !== undefined ? parseFloat(copRaw) : NaN;
+
+        const rates = {
+            uf: isValidNum(ufValue) ? ufValue : null,
+            usd: isValidNum(usdValue) ? usdValue : null,
+            eur: isValidNum(eurValue) ? eurValue : null,
+            ars: isValidNum(arsValue) ? arsValue : null,
+            cop: isValidNum(copValue) ? copValue : null
+        };
+
+        if (Object.values(rates).every(v => v === null)) {
+            throw new Error('Todas las APIs upstream fallaron');
         }
 
-        const [ufData, dolarData, euroData, arsData, copData] = await Promise.all([
-            ufResponse.json(), dolarResponse.json(), euroResponse.json(), arsResponse.json(), copResponse.json()
-        ]);
-
-        if (!ufData?.serie?.[0]?.valor || typeof ufData.serie[0].valor !== 'number') throw new Error('Datos de UF inválidos');
-        if (!dolarData?.serie?.[0]?.valor || typeof dolarData.serie[0].valor !== 'number') throw new Error('Datos de USD inválidos');
-        if (!euroData?.serie?.[0]?.valor || typeof euroData.serie[0].valor !== 'number') throw new Error('Datos de EUR inválidos');
-        if (!arsData?.blue?.value_sell || typeof arsData.blue.value_sell !== 'number') throw new Error('Datos de ARS inválidos');
-        if (!copData?.[0]?.valor || isNaN(parseFloat(copData[0].valor))) throw new Error('Datos de COP inválidos');
-
-        return {
-            uf: ufData.serie[0].valor,
-            usd: dolarData.serie[0].valor,
-            eur: euroData.serie[0].valor,
-            ars: arsData.blue.value_sell,
-            cop: parseFloat(copData[0].valor)
-        };
+        return rates;
     }
 
     async function fetchAllRates() {
+        const hasAnyRate = (r) => r && Object.values(r).some(v => v !== null && v !== undefined && v !== 0);
         const cached = localStorage.getItem('rates_cache');
         if (cached) {
             const { rates: cachedRates, fecha } = JSON.parse(cached);
-            if (fecha === new Date().toDateString() && cachedRates.uf) applyRates(cachedRates);
+            // Cache parcial: aceptar si al menos 1 moneda es válida
+            if (fecha === new Date().toDateString() && hasAnyRate(cachedRates)) applyRates(cachedRates);
         }
 
+        const safeCache = (r) => {
+            if (!hasAnyRate(r)) return;
+            try { localStorage.setItem('rates_cache', JSON.stringify({ rates: r, fecha: new Date().toDateString() })); } catch {}
+        };
+
         try {
-            const res = await fetch('/api/rates');
+            const res = await fetch('/api/rates', { signal: AbortSignal.timeout(5000) });
             if (!res.ok) throw new Error('Proxy failed');
             const newRates = await res.json();
-            localStorage.setItem('rates_cache', JSON.stringify({ rates: newRates, fecha: new Date().toDateString() }));
+            safeCache(newRates);
             applyRates(newRates);
         } catch {
             try {
                 const newRates = await fetchDirectRates();
-                localStorage.setItem('rates_cache', JSON.stringify({ rates: newRates, fecha: new Date().toDateString() }));
+                safeCache(newRates);
                 applyRates(newRates);
             } catch (error) {
-                if (rates.uf === 0) showError();
+                if (!hasAnyRate(rates)) showError();
                 console.error("Error fetching rates:", error);
             }
         }
@@ -88,8 +109,17 @@ document.addEventListener('DOMContentLoaded', () => {
         rawValue = rawValue.replace(/\.(?=\d{3}(?!\d))/g, '').replace(/,/, '.');
         const amount = parseFloat(rawValue) || 0;
         const sourceCurrency = document.querySelector('.currency-pills .pill.active').dataset.value;
-        
-        
+
+        if (sourceCurrency !== 'clp' && (rates[sourceCurrency] === null || rates[sourceCurrency] === undefined)) {
+            resultsContainer.innerHTML = '';
+            const msg = document.createElement('p');
+            msg.textContent = 'Moneda no disponible hoy';
+            msg.style.color = '#d32f2f';
+            msg.style.textAlign = 'center';
+            resultsContainer.appendChild(msg);
+            return;
+        }
+
         let primaryResult, secondaryResults;
 
         if (sourceCurrency === 'uf') {
@@ -130,6 +160,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 { code: 'ARS', value: amountInUsd * rates.ars },
             ];
         }
+
+        // Filtra monedas cuya tasa es null (degradación parcial)
+        const rateKeyByCode = { UF: 'uf', CLP: 'clp', USD: 'usd', EUR: 'eur', ARS: 'ars', COP: 'cop' };
+        secondaryResults = secondaryResults.filter(r => {
+            const key = rateKeyByCode[r.code];
+            if (key === 'clp') return true;
+            return rates[key] !== null && rates[key] !== undefined;
+        });
+
         displayResults(primaryResult, secondaryResults);
     }
 
@@ -144,48 +183,55 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         resultsContainer.innerHTML = '';
-        
+
+        const isRenderable = (v) => typeof v === 'number' && Number.isFinite(v);
+
         const mainResult = document.createElement('div');
         mainResult.className = 'result-main';
         mainResult.setAttribute('data-value', primary.value);
         mainResult.setAttribute('data-code', primary.code);
-        
+
         const mainTitle = document.createElement('h2');
         mainTitle.textContent = `Equivalente en ${primary.code}`;
-        
+
         const mainValue = document.createElement('p');
-        mainValue.textContent = formatters[primary.code].format(primary.value);
-        
+        mainValue.textContent = isRenderable(primary.value)
+            ? formatters[primary.code].format(primary.value)
+            : 'No disponible';
+
         mainResult.appendChild(mainTitle);
         mainResult.appendChild(mainValue);
         resultsContainer.appendChild(mainResult);
-        
+
         const secondaryContainer = document.createElement('div');
         secondaryContainer.className = 'secondary-results';
-        
+
         secondaries.forEach(result => {
+            // Skip si el valor derivado es inválido (ej. división por 0)
+            if (!isRenderable(result.value)) return;
+
             const resultDiv = document.createElement('div');
             resultDiv.className = 'secondary-result';
             resultDiv.setAttribute('data-value', result.value);
             resultDiv.setAttribute('data-code', result.code);
-            
+
             const title = document.createElement('h2');
             title.textContent = result.code;
-            
+
             const value = document.createElement('p');
             value.textContent = formatters[result.code].format(result.value);
-            
+
             resultDiv.appendChild(title);
             resultDiv.appendChild(value);
             secondaryContainer.appendChild(resultDiv);
         });
-        
+
         resultsContainer.appendChild(secondaryContainer);
         addCopyListeners();
     }
 
     function addCopyListeners() {
-        document.querySelectorAll('[data-value]').forEach(element => {
+        resultsContainer.querySelectorAll('[data-value]').forEach(element => {
             let timeoutId = null;
             element.addEventListener('click', () => {
                 if (element.dataset.timeoutId) {
@@ -304,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pill.addEventListener('click', () => {
             document.querySelector('.currency-pills .pill.active').classList.remove('active');
             pill.classList.add('active');
-            localStorage.setItem('selectedCurrency', pill.dataset.value);
+            try { localStorage.setItem('selectedCurrency', pill.dataset.value); } catch {}
             updatePlaceholder();
             renderAndCalculate();
         });
